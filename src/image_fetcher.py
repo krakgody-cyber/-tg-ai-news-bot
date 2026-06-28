@@ -65,11 +65,32 @@ def fetch_og_image(source_url):
     return None
 
 
+def search_duckduckgo(query):
+    try:
+        resp = requests.get(
+            "https://duckduckgo.com/i.js",
+            params={"q": query, "o": "json", "l": "ru-ru", "f": ",,,", "p": "-1"},
+            headers=HEADERS,
+            timeout=15,
+        )
+        if resp.ok:
+            data = resp.json()
+            results = data.get("results", [])
+            if results:
+                return results[0].get("image")
+    except Exception:
+        pass
+    return None
+
+
 def get_image(image_query, source_url):
     img = search_pexels(image_query)
     if img:
         return img
     img = fetch_og_image(source_url)
+    if img:
+        return img
+    img = search_duckduckgo(image_query)
     if img:
         return img
     return None
