@@ -34,7 +34,7 @@ from src.database import (
 )
 from src.news_collector import collect_news, search_topic_news
 from src.post_generator import generate_post, regenerate_post, generate_topic_post
-from src.image_fetcher import search_pexels
+from src.image_fetcher import get_image
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
@@ -187,7 +187,7 @@ def handle_callback(callback):
         tags = result.get("tags", ["AI", "новости"])
 
         old_img = post.get("image_url")
-        new_image_url = search_pexels(image_query) or old_img
+        new_image_url = get_image(image_query, post.get("source_url", "")) or old_img
 
         update_post_content(post_id, new_title, new_content)
         if new_image_url and new_image_url != old_img:
@@ -342,9 +342,9 @@ def process_news():
             if not post_text:
                 continue
 
-            image_url = search_pexels(image_query)
-
             source_url = batch[0]["url"]
+            image_url = get_image(image_query, source_url)
+
             save_post(source_url, title, post_text, image_url or "")
 
             for item in batch:
@@ -383,9 +383,9 @@ def process_topic_post(topic, chat_id):
         image_query = result.get("image_query", "AI technology")
         tags = result.get("tags", ["AI", topic])
 
-        image_url = search_pexels(image_query)
-
         source_url = news_items[0]["url"] if news_items else ""
+        image_url = get_image(image_query, source_url)
+
         save_post(source_url, title, post_text, image_url or "")
 
         for item in news_items[:5]:
