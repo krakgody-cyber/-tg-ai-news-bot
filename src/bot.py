@@ -105,9 +105,7 @@ def build_keyboard(post_id):
 
 
 def build_post_caption(title, content, tags, source_url=""):
-    tags_str = " #".join([""] + (tags or ["AI", "новости"]))
-    text = f"*{title}*\n\n{content}\n\n{tags_str}"
-    return text
+    return f"*{title}*\n\n{content}"
 
 
 def send_post_to_admin(image_url, caption, keyboard):
@@ -296,7 +294,7 @@ def handle_text_message(text, chat_id, msg):
 
         update_post_content(post_id, new_title, new_full_text)
 
-        caption = f"*{new_title}*\n\n{new_full_text}\n\n #AI #новости"
+        caption = f"*{new_title}*\n\n{new_full_text}"
 
         clear_edit_state(chat_id)
         send_message(chat_id,
