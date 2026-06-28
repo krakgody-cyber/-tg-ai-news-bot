@@ -1,6 +1,7 @@
 import json
 import logging
 import requests
+import threading
 from datetime import datetime
 
 from flask import Flask, request
@@ -416,6 +417,11 @@ def webhook():
     if not update:
         return "ok", 200
 
+    threading.Thread(target=_process_update, args=(update,), daemon=True).start()
+    return "ok", 200
+
+
+def _process_update(update):
     try:
         if "callback_query" in update:
             handle_callback(update["callback_query"])
@@ -426,8 +432,6 @@ def webhook():
             handle_text_message(text, chat_id, msg)
     except Exception as e:
         logger.exception(f"Webhook error: {e}")
-
-    return "ok", 200
 
 
 def set_webhook():
