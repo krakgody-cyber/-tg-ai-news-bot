@@ -1,0 +1,38 @@
+services:
+  - type: web
+    name: tg-ai-news-bot
+    runtime: python
+    region: frankfurt
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn src.main:app --bind 0.0.0.0:$PORT --workers 1 --threads 4
+    envVars:
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: TELEGRAM_ADMIN_ID
+        sync: false
+      - key: TELEGRAM_CHANNEL_ID
+        sync: false
+      - key: OPENROUTER_API_KEY
+        sync: false
+      - key: OPENROUTER_MODEL
+        value: deepseek/deepseek-v4-flash-free
+      - key: BOT_MODE
+        value: webhook
+      - key: WEBHOOK_URL
+        sync: false
+      - key: PEXELS_API_KEY
+        sync: false
+
+  # Пингует сервис каждые 5 минут, чтобы Render не усыплял
+  - type: cron
+    name: keep-alive
+    runtime: python
+    region: frankfurt
+    plan: free
+    schedule: "*/5 * * * *"
+    buildCommand: ""
+    startCommand: python -c "import urllib.request; urllib.request.urlopen('https://tg-ai-news-bot.onrender.com/ping', timeout=10)"
+    envVars:
+      - key: WEBHOOK_URL
+        sync: false
