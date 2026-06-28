@@ -107,8 +107,6 @@ def build_keyboard(post_id):
 def build_post_caption(title, content, tags, source_url=""):
     tags_str = " #".join([""] + (tags or ["AI", "новости"]))
     text = f"*{title}*\n\n{content}\n\n{tags_str}"
-    if source_url:
-        text += f"\n\n{source_url}"
     return text
 
 
@@ -140,8 +138,6 @@ def handle_callback(callback):
         post = get_post(post_id)
         if post:
             text = f"*{post['title']}*\n\n{post['content']}"
-            if post.get("source_url"):
-                text += f"\n\n{post['source_url']}"
             if post.get("image_url"):
                 send_photo_post(TELEGRAM_CHANNEL_ID, post["image_url"], text)
             else:
@@ -300,10 +296,7 @@ def handle_text_message(text, chat_id, msg):
 
         update_post_content(post_id, new_title, new_full_text)
 
-        source_url = post.get("source_url", "")
         caption = f"*{new_title}*\n\n{new_full_text}\n\n #AI #новости"
-        if source_url:
-            caption += f"\n\n{source_url}"
 
         clear_edit_state(chat_id)
         send_message(chat_id,
