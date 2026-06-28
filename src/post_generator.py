@@ -29,17 +29,26 @@ SYSTEM_PROMPT = """Ты — автор Telegram-канала про мир AI. �
 
 
 def _call_api(messages, temp=0.8):
+    import json
     try:
         resp = client.chat.completions.create(
             model=OPENROUTER_MODEL,
             messages=messages,
-            response_format={"type": "json_object"},
             temperature=temp,
             max_tokens=1500,
         )
         content = resp.choices[0].message.content.strip()
-        import json
-        return json.loads(content)
+        start = content.find("{")
+        end = content.rfind("}")
+        if start != -1 and end != -1:
+            content = content[start : end + 1]
+            return json.loads(content)
+        return {
+            "title": "Ошибка",
+            "post": content[:500],
+            "image_query": "AI technology abstract",
+            "tags": ["AI", "новости"],
+        }
     except Exception as e:
         return {
             "title": "Ошибка генерации",
