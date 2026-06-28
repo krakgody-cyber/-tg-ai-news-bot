@@ -104,9 +104,12 @@ def build_keyboard(post_id):
     })
 
 
-def build_post_caption(title, content, tags):
+def build_post_caption(title, content, tags, source_url=""):
     tags_str = " #".join([""] + (tags or ["AI", "новости"]))
-    return f"*{title}*\n\n{content}\n\n{tags_str}"
+    text = f"*{title}*\n\n{content}\n\n{tags_str}"
+    if source_url:
+        text += f"\n\n{source_url}"
+    return text
 
 
 def send_post_to_admin(image_url, caption, keyboard):
@@ -137,6 +140,8 @@ def handle_callback(callback):
         post = get_post(post_id)
         if post:
             text = f"*{post['title']}*\n\n{post['content']}"
+            if post.get("source_url"):
+                text += f"\n\n{post['source_url']}"
             if post.get("image_url"):
                 send_photo_post(TELEGRAM_CHANNEL_ID, post["image_url"], text)
             else:
@@ -192,7 +197,8 @@ def handle_callback(callback):
             conn.commit()
             conn.close()
 
-        caption = build_post_caption(new_title, new_content, tags)
+        source_url = post.get("source_url", "")
+        caption = build_post_caption(new_title, new_content, tags, source_url)
         tg_api("deleteMessage", {"chat_id": msg["chat"]["id"], "message_id": msg_id})
         send_post_to_admin(new_image_url, caption, build_keyboard(post_id))
 
@@ -294,7 +300,10 @@ def handle_text_message(text, chat_id, msg):
 
         update_post_content(post_id, new_title, new_full_text)
 
+        source_url = post.get("source_url", "")
         caption = f"*{new_title}*\n\n{new_full_text}\n\n #AI #новости"
+        if source_url:
+            caption += f"\n\n{source_url}"
 
         clear_edit_state(chat_id)
         send_message(chat_id,
@@ -345,7 +354,7 @@ def process_news():
             if not post_id:
                 continue
 
-            caption = build_post_caption(title, post_text, tags)
+            caption = build_post_caption(title, post_text, tags, source_url)
             keyboard = build_keyboard(post_id)
 
             send_post_to_admin(image_url, caption, keyboard)
@@ -384,7 +393,7 @@ def process_topic_post(topic, chat_id):
 
         post_id = get_last_post_id()
         if post_id:
-            caption = build_post_caption(title, post_text, tags)
+            caption = build_post_caption(title, post_text, tags, source_url)
             send_post_to_admin(image_url, caption, build_keyboard(post_id))
             send_message(chat_id, f"✅ Пост на тему «{topic}» отправлен на утверждение!")
         else:
